@@ -153,7 +153,7 @@ mvn package
 java -jar target/student-api.jar
 ```
 
-## Testing Endpoints
+## Testing
 ### API documentation
 Visit the following URLs to more details about the API endpoints:
 * course-api: http://localhost:8081/public/swagger-ui/index.html
