@@ -49,7 +49,7 @@ To minimize/remove the boilerplate code, Lombok library is used.
 #### Controller Class
 ``CourseController`` is the controller class of this application that contains the implementation of the following endpoints:
 1. GET /api/course - Returns all Course record in the database.
-2. GET /api/course/{code} - Returns the information about the Course having the input {code}
+2. GET /api/cours/{code} - Returns the information about the Course having the input {code}
 3. POST /api/course - creates a new Course record
 4. PUT /api/course/{code} - updates an existing Course record having the input code
 5. DELETE /api/course/{code} - delete an existing Course record having the input code
@@ -61,7 +61,7 @@ The main entry point of the application is the ``CoursesApiApplication`` that st
 embedded tomcat as the server. Configurations about the application server are configured in the application.properties file.
 
 ### student-api
-#### Entity Class
+#### Entity Classes
 * ``Student`` class holds the information about the student object. For simplicity this entity contains the Id, Name and Age attributes.
 * ``StudentCourses`` classes holds the information about the courses a student is enrolled on to. It includes the following attributes:
     * id: Auto generated record id
@@ -90,81 +90,15 @@ Upon retrieval, the Course instance is then transformed into a StudentCourses ob
 * ``StudentCoursesController`` class implements the endpoints that will perform CRUD operations to StudentCourses entity. Below are the details about these operations:
     * GET /api/student/courses/{studentId} - retrieves all the enrolled courses for the student having the input student id
     * POST /api/student/courses/{studentId}/{code} - Add course enrollment for the student. For this endpoint it performs following communication to course-api:
-        * Invoke GET /api/course/{code} 
-        * If the Course having the input code is available and NOT deleted (i.e., deleted flag is N), create a new record in StudentCourses table (if not yet enrolled).
-        * If the Course record is NOT available or has been deleted, return NOT_FOUND error
-        
-        Below is the flow of communications for this endpoint:
-        ```sequence
-        student-api-client -> student-api: GET /api/student/courses/{studentId}/{code} 
-        student-api -> course-api: GET /api/course/{code}
-            Possible Results: 
-                course-api -> student-api: Found it! Here are the details.
-                    student-api: Is the Course still active? Yes!
-                        student-api -> student-api-client: Success!
-                    student-api: Is the Course still active? No!
-                        student-api -> student-api-client: Course NOT FOUND!
-                course-api -> student-api: I can't find it. NOT_FOUND.
-                    student-api -> student-api-client: Course NOT FOUND!
-        ```
-    * PUT /api/student/courses/{studentId}/{code} - Update the details of a course enrollment, focusing on modifying the course name and description. Upon invoking the GET /api/course/{code} endpoint of the course-api, the relevant information is updated if the course data is available. The same flow of communication is followed innthe POST operation endpoint.
-    * DELETE /api/student/courses/{studentId}/{code} - Remove the course to the list of enrolled course for the student.
-
-These api endpoints are documented in the swagger-endpoint that can be accessed via ``http://<server>:<port>/public/swagger-ui/index.html`` URL.
-
-#### Main Class
-The main entry point of the application is the ``StudentApiApplication`` that starts a Spring web application using 
-embedded tomcat as the server. Configurations about the application server are configured in the application.properties file.
+        * Invoke GET Retrieve the list of courses that a specific student is currently enrolled in.
 
 ## Error Handling
 To maintain simplicity, both applications (course-api and student-api) currently returns standard HTTP error codes to the caller application for any encountered errors. However, for future enhancements, a more sophisticated ErrorResponse object can be implemented. This object would provide meaningful error details tailored to the specific error scenarios instead of relying solely on the standard error details returned by the Spring Boot framework.
 
-## Security
-Both projects feature a straightforward security solution utilizing API Key authentication, using Spring Security framework. For simplicity, only one API key is configured in the application.properties file to control access. As the project evolves, a more sophisticated API key management solution can be explored and implemented to enhance security further. The following are the security classes implemented for the ApiKey authentication:
-* ApiKeyAuth: Stores the authentication token.
-* ApiKeyAuthExtractor: Extracts the value of the *x-api-key* from the request header. If the header is available and is equal to the expected api key configured in the application.properties, and instance of the Authentication object is returned.
-* ApiKeyAuthFilter: The filter class responsible for invoking the extract() method of the ApiKeyAuthExtractor. If an Authentication object is successfully extracted, it is stored in the SecurityContextHolder, ensuring its availability during the invocation of the API endpoint.
-
-## Health Check
-Utilizing the Spring Boot Actuator framework, you can assess the health status of different components within the application by accessing the following endpoints:
-
-*Course API Health Endpoint:*
-* URL: http://localhost:8081/public/course-api/health
-* Description: This endpoint provides basic health information related to the Course API. Currently, it offers simple health details, but in subsequent versions, additional relevant metrics and status information can be configured and exposed.
-
-*Student API Health Endpoint:*
-* URL: http://localhost:8080/public/student-api/health
-* Description: Similarly, this endpoint facilitates the retrieval of health status specific to the Student API. Similar to the Course API, the health endpoint for the Student API offers fundamental health data, with provisions for enhancing and configuring more comprehensive health metrics in future iterations.
-
-These health endpoints offer a convenient means to monitor the overall health and stability of the application's components. As the application evolves, additional health checks and metrics can be integrated to provide more insightful information about the system's operational status and performance.
-
 ## How to Run the Application
 Requirements: Java 17, Maven 3
 
-1. Run course-api project
 ```
 mvn package
-java -jar target/course-api.jar
+java -jar target/weathercheck.jar
 ```
-
-2. Run student-api project
-```
-mvn package
-java -jar target/student-api.jar
-```
-
-## Testing
-### API documentation
-Visit the following URLs to more details about the API endpoints:
-* course-api: http://localhost:8081/public/swagger-ui/index.html
-* student-api: http://localhost:8080/public/swagger-ui/index.html
-
-### Test Data
-The project initializes the Student and Course tables with initial data, which is hardcoded and loaded upon application startup. You can use the following sample data when invoking the necessary endpoints:
-* Student Id: {1, 2, 3, 4}
-* Course code: {"CS01", "CS02", "CS03", "CS04"}
-
-#### API Keys
-To invoke the endpoints of the projects, use the following Api Keys:
-* course-api: 268d7f300e113cf987e1a1bdb151ae8e
-* student-api: 146f5e1cb6a309cfbc05b8bca5ad3ef0
